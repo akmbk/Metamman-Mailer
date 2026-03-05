@@ -1,13 +1,14 @@
 const nodemailer = require('nodemailer');
 
 exports.handler = async (event, context) => {
-  // 1. The "Logic Gate" for CORS (Pre-flight Probe)
+  // 1. THE CORS GATE (Crucial for Browsers)
   const headers = {
-    "Access-Control-Allow-Origin": "*", // Allow any frontend to pulse this server
+    "Access-Control-Allow-Origin": "*", 
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS"
   };
 
+  // Handle the "Probe" signal
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers, body: "OK" };
   }
@@ -18,20 +19,9 @@ exports.handler = async (event, context) => {
 
   try {
     const data = JSON.parse(event.body);
-    const { to, subject, message, xAuthKey } = data; 
+    const { to, subject, message } = data; // No xAuthKey needed!
 
-    const secretKey = process.env.COMM_KEY;
-
-    // 2. Auth Signal Check
-    if (!xAuthKey || xAuthKey !== secretKey) {
-        return {
-            statusCode: 401,
-            headers,
-            body: JSON.stringify({ error: "Signal Mismatch: Invalid Auth Key" })
-        };
-    }
-    
-    // 3. The SMTP Transformer
+    // 2. THE SMTP POWER SUPPLY
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -47,13 +37,13 @@ exports.handler = async (event, context) => {
       text: message
     };
 
-    // 4. Send the Pulse
+    // 3. FIRING THE PULSE
     await transporter.sendMail(mailOptions);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ message: "Email sent successfully!" })
+      body: JSON.stringify({ message: "Signal Received: Email Dispatched!" })
     };
   } catch (error) {
     return {
